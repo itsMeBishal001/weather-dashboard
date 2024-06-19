@@ -15,6 +15,7 @@ A Weather Dashboard that shows the current weather and a 5-day forecast for a gi
    ```bash
    git clone https://github.com/yourusername/weather-dashboard.git
    cd weather-dashboard
+   npm install
    npm run server
    npm start
 
