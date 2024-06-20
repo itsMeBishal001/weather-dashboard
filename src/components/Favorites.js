@@ -1,33 +1,32 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 
-const Favorites = ({
-  favorites,
-  onAdd,
-  onRemove,
-  onDisplay,
-  fetchFavoriteWeather,
-}) => {
+const Favorites = ({ favorites, onAdd, onRemove, fetchFavoriteWeather }) => {
   const [newCity, setNewCity] = useState("");
-
   const [favoriteWeatherData, setFavoriteWeatherData] = useState({});
+
+  const fetchWeatherForCity = useCallback(
+    async (city) => {
+      try {
+        const data = await fetchFavoriteWeather(city);
+        setFavoriteWeatherData((prevData) => ({
+          ...prevData,
+          [city]: data,
+        }));
+      } catch (error) {
+        console.error(`Failed to fetch weather data for ${city}:`, error);
+      }
+    },
+    [fetchFavoriteWeather]
+  );
 
   useEffect(() => {
     const fetchFavoriteWeatherData = async () => {
-      const weatherPromises = favorites.map(async (fav) => {
-        const data = await fetchFavoriteWeather(fav.city);
-        return { city: fav.city, weather: data }; // Combine city name with weather data
-      });
-      const weatherData = await Promise.all(weatherPromises); // Wait for all fetches to complete
-      setFavoriteWeatherData(
-        weatherData.reduce(
-          (acc, curr) => ({ ...acc, [curr.city]: curr.weather }),
-          {}
-        )
-      );
+      const weatherPromises = favorites.map((fav) => fetchWeatherForCity(fav.city));
+      await Promise.all(weatherPromises);
     };
-
     fetchFavoriteWeatherData();
-  }, [favorites, fetchFavoriteWeather]);
+  }, [favorites, fetchWeatherForCity]);
+
   const handleAdd = () => {
     if (newCity.trim() === "") {
       alert("Please enter a city name.");
@@ -37,37 +36,42 @@ const Favorites = ({
     setNewCity("");
   };
 
-  const handleFavoriteClick = (city) => {
-    console.log("clik");
-    onDisplay(city); // Call the prop function to display weather for the selected city
-  };
-
   return (
     <div className="favorites">
-      <h3>Favorites</h3>
       <ul className="favorites-list">
         {favorites.map((fav) => {
-          const weather = favoriteWeatherData[fav.city]; // Get weather data for this city
+          const weather = favoriteWeatherData[fav.city];
           return (
             <li key={fav.id} className="favorite-item">
               <div className="favorite-info">
-                <span onClick={() => handleFavoriteClick(fav.city)}>
-                  {fav.city}
+                <span style={{ fontWeight: "bold" }}>
+                  {fav?.city?.toUpperCase()}
                 </span>
-                {weather?.current && (
-                  <div className="weather-summary">
-                    <img
-                      src={`http://openweathermap.org/img/wn/${weather?.current?.weather[0]?.icon}@2x.png`}
-                      alt={`${weather?.current?.weather[0]?.description} icon`}
-                    />
-                    <p>{Math.round(weather?.current?.main?.temp)}&deg;</p>
+                {weather ? (
+                  weather?.currentWeather && (
+                    <div className="weather-summary">
+                      <img
+                        src={`http://openweathermap.org/img/wn/${weather?.currentWeather?.weather[0]?.icon}@2x.png`}
+                        alt={`${weather?.currentWeather?.weather[0]?.description} icon`}
+                      />
+                      <p>{Math.round(weather?.currentWeather?.main?.temp)}&deg;</p>
+                      <p>{weather?.currentWeather?.weather[0]?.description}</p>
+                    </div>
+                  )
+                ) : (
+                  <div className="no-weather-data">
+                    <i className="material-icons error-icon">error_outline</i>
+                    <p>No weather data available for this location.</p>
+                    <button
+                      className="refresh-button"
+                      onClick={() => fetchWeatherForCity(fav.city)}
+                    >
+                      Refresh
+                    </button>
                   </div>
                 )}
               </div>
-              <button
-                onClick={() => onRemove(fav.id)}
-                className="remove-button"
-              >
+              <button onClick={() => onRemove(fav.id)} className="remove-button">
                 Remove
               </button>
             </li>

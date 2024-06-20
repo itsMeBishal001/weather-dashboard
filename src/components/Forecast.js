@@ -28,7 +28,6 @@ const Forecast = ({ forecastData, unit }) => {
                 <div key={index} className="forecast-item">
                   <p>
                     <span className="icon">
-                      {/* Optional: Add weather icons based on your provider */}
                     </span>
                     <span className="time">
                       {new Date(forecast.dt * 1000).toLocaleTimeString([], {

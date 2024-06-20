@@ -11,7 +11,7 @@ const WeatherDashboard = () => {
   const [favorites, setFavorites] = useState([]);
   const [unit, setUnit] = useState("metric"); // 'metric' for Celsius, 'imperial' for Fahrenheit
 
-  const API_KEY = "697e5c830cc96056a0066214d1af9f2e";
+  const API_KEY = process.env.REACT_APP_API_KEY;
 
   const fetchWeatherData = async (city) => {
     try {
@@ -123,7 +123,7 @@ const WeatherDashboard = () => {
       );
 
       if (geoResponse.data.length === 0) {
-        alert("City not found");
+        console.error("City not found");
         return;
       }
 
@@ -163,18 +163,6 @@ const WeatherDashboard = () => {
     }
   };
 
-  const displayFavoriteWeather = async (city) => {
-    const favoriteWeatherData = await fetchFavoriteWeather(city);
-    console.log(favoriteWeatherData);
-    if (favoriteWeatherData) {
-      return (
-        <WeatherDisplay data={favoriteWeatherData.currentWeather} unit={unit} />
-      );
-    } else {
-      return null; // Or display an error message
-    }
-  };
-
   return (
     <div className="weatherDashboard">
       <header className="dashboard-header">
@@ -193,7 +181,6 @@ const WeatherDashboard = () => {
           favorites={favorites}
           onAdd={addFavorite}
           onRemove={removeFavorite}
-          onDisplay={displayFavoriteWeather}
           fetchFavoriteWeather={fetchFavoriteWeather}
         />
       </aside>
